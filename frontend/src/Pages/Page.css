@@ -1,0 +1,24 @@
+.container {
+    display: block;
+    align-items: center;
+    background: lightgrey;
+}
+
+.upload {
+    height: 250px;
+    width: 40%;
+    border: 1px solid black;
+    margin-bottom: 10px;
+    justify-content: center;
+}
+
+.view {
+    height: 250px;
+    width: 40%;
+    border: 1px solid black;
+}
+
+input[type='file'] {
+    color: green;
+    
+}
