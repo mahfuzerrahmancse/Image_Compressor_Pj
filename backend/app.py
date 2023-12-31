@@ -1,108 +1,59 @@
-# from flask import Flask, request, jsonify
-# from PIL import Image
-# from io import BytesIO
-# from base64 import b64encode
-# from tkinter.filedialog import askopenfilename
-
-# app = Flask(__name__)
-
-# def compress_image(input_path, quality=85):
-#     img = Image.open(input_path)
-
-#     # Resize the image
-#     img = img.resize(img.size, Image.BICUBIC)
-
-#     # Save the compressed image to BytesIO
-#     output_buffer = BytesIO()
-#     img.save(output_buffer, format="WEBP", quality=quality)
-    
-#     # Convert the BytesIO object to a base64-encoded string
-#     compressed_image_base64 = b64encode(output_buffer.getvalue()).decode('utf-8')
-
-#     return compressed_image_base64
-
-# @app.route('/compress', methods=['POST'])
-# def compress_image_api():
-#     try:
-#         # Open file dialog to choose an image file
-#         file_path = askopenfilename()
-
-#         # Check if a file was selected
-#         if not file_path:
-#             return jsonify({"error": "No file selected."}), 400
-
-#         # Compress the image and get the base64-encoded string
-#         compressed_image_base64 = compress_image(file_path)
-
-#         return jsonify({"compressed_image": compressed_image_base64}), 200
-
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-
-# if __name__ == '__main__':
-#     app.run(debug=True)
-
-
-# from flask import Flask
-# from PIL import Image
-# from tkinter.filedialog import askopenfilename, asksaveasfilename
-
-# app = Flask(__name__)
-
-# @app.route('/',methods=['POST'])
-# def img_compress():
-
-#     file_path = askopenfilename()
-#     img = Image.open(file_path)
-#     myWidth, myHeight = img.size
-
-#     img = img.resize((myWidth, myHeight), Image.BICUBIC)
-
-#     save_path = asksaveasfilename()
-#     img.save(save_path + "_compressed.jpg" , format="WEBP", quality=85)
-    
-#     return 'Hello, World!'
-
-# if __name__ == '__main__':
-#     app.run(debug=True)
-
-
 from flask import Flask, request, jsonify
 from PIL import Image
 from tkinter.filedialog import askopenfilename, asksaveasfilename
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
+def compress_image(file_path, save_path):
+    img = Image.open(file_path)
+    myWidth, myHeight = img.size
 
-@app.route('/img_compress', methods=['POST'])
-def img_compress():
+    # Resize the image
+    img = img.resize((myWidth, myHeight), Image.BICUBIC)
+
+    # Save the image in WebP format with reduced quality to decrease file size
+    img.save(save_path + "_compressed.webp", format="WEBP", quality=85)
+
+@app.route('/compress_image', methods=['POST'])
+def compress_image_api():
     try:
-        # Get the file from the request
+        print("111111111")
+        # Assuming the client sends a file in the request
         file = request.files['file']
         
-        # Save the file to a temporary location
-        file_path = '/tmp/input_image.jpg'
-        file.save(file_path)
+        # Save the received file temporarily
+        temp_path = "temp_image.jpg"
+        file.save(temp_path)
 
-        # Open the image file
-        img = Image.open(file_path)
-        myWidth, myHeight = img.size
+        # Use the compression function
+        save_path = asksaveasfilename()  # You may want to replace this with a predefined path
+        compress_image(temp_path, save_path)
 
-        # Resize the image
-        img = img.resize((myWidth, myHeight), Image.BICUBIC)
-
-        # Save the compressed image to a temporary location
-        compressed_path = '/tmp/compressed_image.jpg'
-        img.save(compressed_path, format="JPEG", quality=85)
-
-        # Read the compressed image as binary data
-        with open(compressed_path, 'rb') as f:
-            compressed_data = f.read()
-
-        return jsonify({"compressed_image": compressed_data.decode('latin-1')})
-
+        return jsonify({"message": "Image compressed successfully"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/', methods=['GET'])
+def enhance():
+    return 'Server Is Running'
 
 if __name__ == '__main__':
     app.run(debug=True)
 
+
+# from PIL import Image
+# from tkinter.filedialog import askopenfilename, asksaveasfilename
+
+# file_path = askopenfilename()
+# img = Image.open(file_path)
+# myWidth, myHeight = img.size
+
+# # Resize the image
+# img = img.resize((myWidth, myHeight), Image.BICUBIC)
+
+# # Ask the user for the output file path
+# save_path = asksaveasfilename()
+
+# # Save the image in WebP format with reduced quality to decrease file size
+# img.save(save_path + "_compressed.webp", format="WEBP", quality=85) 
