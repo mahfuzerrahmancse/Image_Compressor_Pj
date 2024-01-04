@@ -1,8 +1,11 @@
-from flask import Flask, request, jsonify
+# final code
+
+from flask import Flask, request, jsonify, send_file, send_from_directory
 from PIL import Image
 from flask_cors import CORS
 import os
 from datetime import datetime
+
 app = Flask(__name__)
 CORS(app)
 
@@ -18,9 +21,10 @@ def compress_image(file_path, save_folder, target_size_kb=1024, target_size_redu
     # Starting quality
     quality = 90  # Starting quality, you can adjust this based on your preference
     current_date = datetime.now().strftime("%Y%m%d%H%M%S")
+    compressed_image_name = f"{current_date}_compressed_image.jpeg"
+    compressed_image_path = os.path.join(save_folder, compressed_image_name)
     while True:
         # Save the image in JPEG format with the current quality setting
-        compressed_image_path = os.path.join(save_folder, current_date + "compressed_image.jpeg")
         img.save(compressed_image_path, format="jpeg", quality=quality)
 
         # Check the file size
@@ -34,12 +38,11 @@ def compress_image(file_path, save_folder, target_size_kb=1024, target_size_redu
         if compressed_size_kb <= target_size_kb:
             break
 
-    return quality
+    return compressed_image_name
 
 @app.route('/compress_image', methods=['POST'])
 def compress_image_api():
     try:
-        print("111111111")
         # Assuming the client sends a file in the request
         file = request.files['file']
 
@@ -65,16 +68,27 @@ def compress_image_api():
         # Get the final quality setting
         final_quality = compress_image(temp_path, save_folder, target_size_kb, target_size_reduction, max_width, max_height)
 
-        return jsonify({"message": f"Image compressed successfully with quality: {final_quality}"})
+        return jsonify(final_quality)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route('/images/<path:image_name>', methods=['GET'])
+def images(image_name):
+    try:
+        directory = "images"  # Update this with the correct directory path
+        return send_from_directory(directory, image_name)
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
 
 
-
 # original algorithm
+    
 # from PIL import Image
 # from tkinter.filedialog import askopenfilename, asksaveasfilename
 

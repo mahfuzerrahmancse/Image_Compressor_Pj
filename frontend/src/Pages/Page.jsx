@@ -1,58 +1,96 @@
 import React, { useState } from "react";
-import styles from "./Page.module.css";
+import './Page.css'
 
 export const Page = () => {
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [file, setFile] = useState(null);
+  const [compressedImageUrl, setCompressedImageUrl] = useState(null);
 
-  const handleImageChange = (event) => {
-    const image = event.target.files[0];
-    if (image.size < 2000000) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setSelectedImage(reader.result);
-      };
-      reader.readAsDataURL(image);
-    } else {
-      alert("Image size more than 2MB");
+  const handleFileChange = (event) => {
+    setFile(event.target.files[0]);
+  };
+
+  const handleUpload = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("http://localhost:5000/compress_image", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const compressedImageName = await response.json();
+        const compressedUrl = `http://localhost:5000/images/${compressedImageName}`;
+        setCompressedImageUrl(compressedUrl);
+      } else {
+        // Handle error
+        console.error("Error compressing image");
+      }
+    } catch (error) {
+      console.error("Error:", error);
     }
   };
 
-  const handleSelectImageClick = () => {
-    document.getElementById("file").click();
-  };
-
   return (
-    <div className={styles.container}>
-      <input
-        type="file"
-        id="file"
-        accept="image/*"
-        hidden
-        onChange={handleImageChange}
-      />
+    <div>
       <div
-        className={`${styles["img-area"]} ${
-          selectedImage ? styles.active : ""
-        }`}
-        data-img={selectedImage ? "image" : ""}
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          padding: "20px",
+          background: "#f0f0f0",
+          alignItems: "center",
+          gap: "10px",
+        }}
       >
-        {!selectedImage && (
-          <>
-            <i
-              className={`bx bxs-cloud-upload ${styles.icon}`}
-              style={{ fontSize: "100px" }}
-            ></i>
-            <h3>Upload Image</h3>
-            <p>
-              Image size must be less than <span>2MB</span>
-            </p>
-          </>
-        )}
-        {selectedImage && <img src={selectedImage} alt="Preview" />}
+        <input
+          type="file"
+          style={{
+            padding: "10px",
+            background: "#f0f0f0",
+            border: "1px solid black",
+            borderRadius: "10px",
+          }}
+          onChange={handleFileChange}
+        />
+        <button
+          style={{
+            padding: "15px",
+            background: "green",
+            border: "none",
+            color: "white",
+            borderRadius: "10px",
+            cursor: "pointer",
+            fontSize:"16px",
+          }}
+          onClick={handleUpload}
+        >
+          Compress
+        </button>
       </div>
-      <button className={styles.selectImage} onClick={handleSelectImageClick}>
-        Select Image
-      </button>
+      <div style={{ display: "flex" }}>
+        {file && (
+          <div style={{ width: "50%", padding: "20px" }}>
+            <p>Original Image:</p>
+            <img
+              style={{ width: "100%" }}
+              src={URL.createObjectURL(file)}
+              alt="Compressed"
+            />
+          </div>
+        )}
+        {compressedImageUrl && (
+          <div style={{ width: "50%", padding: "20px" }}>
+            <p>Compressed Image:</p>
+            <img
+              style={{ width: "100%" }}
+              src={compressedImageUrl}
+              alt="Compressed"
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 };
